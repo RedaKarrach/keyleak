@@ -10,3 +10,4 @@ venv/
 incident.html
 *.html
 !docs/**/*.html
+.claude/launch.json
