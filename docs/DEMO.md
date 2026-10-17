@@ -20,7 +20,7 @@ demo "more realistic". Bots would find it before you finish reading this page.
   - *Responder*: your normal admin login for the throwaway account (SSO or an admin
     user). keyleak runs as this one.
   - *Victim*: an IAM user you will create below, whose key plays the leaked key.
-- **Install the tools.** The AWS CLI, keyleak (`pipx install keyleak`), and Stratus
+- **Install the tools.** The AWS CLI, keyleak (`pipx install git+https://github.com/RedaKarrach/keyleak`), and Stratus
   (`brew install datadog/stratus-red-team/stratus-red-team`, or a release binary
   from https://github.com/DataDog/stratus-red-team/releases).
 - **Expect a small bill.** Cents to a couple of dollars if you clean up the same

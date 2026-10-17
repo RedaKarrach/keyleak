@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="t d">
+  <title id="t">keyleak</title>
+  <desc id="d">A leaking key next to the words: your AWS key ended up on GitHub. Now what?</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#141b35"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#e09f1f"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1280" height="400" fill="url(#bg)"/>
+  <g opacity="0.12" stroke="#8fa3ff" stroke-width="1">
+    <path d="M0 80 H1280 M0 160 H1280 M0 240 H1280 M0 320 H1280"/>
+    <path d="M160 0 V400 M320 0 V400 M480 0 V400 M640 0 V400 M800 0 V400 M960 0 V400 M1120 0 V400"/>
+  </g>
+
+  <!-- key -->
+  <g transform="translate(120,120) rotate(-28)">
+    <circle cx="0" cy="0" r="58" fill="none" stroke="url(#gold)" stroke-width="26" filter="url(#glow)"/>
+    <rect x="52" y="-13" width="250" height="26" rx="8" fill="url(#gold)"/>
+    <rect x="214" y="10" width="22" height="42" rx="4" fill="url(#gold)"/>
+    <rect x="260" y="10" width="22" height="56" rx="4" fill="url(#gold)"/>
+    <!-- crack -->
+    <path d="M150 -13 l10 10 l-12 8 l14 11" fill="none" stroke="#0b1020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- drips -->
+  <g fill="#ffd166" opacity="0.9">
+    <path d="M232 236 c0 10 -8 16 -8 24 a8 8 0 0 0 16 0 c0 -8 -8 -14 -8 -24z"/>
+    <path d="M252 286 c0 8 -6 12 -6 18 a6 6 0 0 0 12 0 c0 -6 -6 -10 -6 -18z" opacity="0.7"/>
+    <path d="M226 322 c0 6 -5 9 -5 14 a5 5 0 0 0 10 0 c0 -5 -5 -8 -5 -14z" opacity="0.5"/>
+  </g>
+
+  <!-- pivot chain -->
+  <g transform="translate(360,300)" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15">
+    <rect x="0" y="-18" width="150" height="36" rx="8" fill="#1e2746" stroke="#ff5c5c" stroke-width="2"/>
+    <text x="75" y="6" fill="#ffb4b4" text-anchor="middle">AKIA…EXAMPLE</text>
+    <path d="M150 0 h40" stroke="#8fa3ff" stroke-width="2" marker-end="url(#a)"/>
+    <rect x="190" y="-18" width="130" height="36" rx="8" fill="#1e2746" stroke="#ff5c5c" stroke-width="2"/>
+    <text x="255" y="6" fill="#ffb4b4" text-anchor="middle">backup-svc</text>
+    <path d="M320 0 h40" stroke="#8fa3ff" stroke-width="2"/>
+    <rect x="360" y="-18" width="160" height="36" rx="8" fill="#1e2746" stroke="#ff5c5c" stroke-width="2"/>
+    <text x="440" y="6" fill="#ffb4b4" text-anchor="middle">AKIA…ATTACKER</text>
+    <path d="M520 0 h40" stroke="#8fa3ff" stroke-width="2"/>
+    <rect x="560" y="-18" width="180" height="36" rx="8" fill="#1e2746" stroke="#ff5c5c" stroke-width="2"/>
+    <text x="650" y="6" fill="#ffb4b4" text-anchor="middle">8 × g5.2xlarge</text>
+  </g>
+
+  <text x="360" y="150" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="72" font-weight="800" fill="#ffffff" letter-spacing="-2">keyleak</text>
+  <text x="364" y="200" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="30" fill="#c9d2ff">Your AWS key ended up on GitHub. Now what?</text>
+  <text x="364" y="240" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" fill="#8fa3ff">What did the attacker do, and what is still running. One command. Read-only.</text>
+</svg>

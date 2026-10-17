@@ -2,6 +2,10 @@
 
 What happens if your AWS key ends up on GitHub?
 
+![keyleak: your AWS key ended up on GitHub. Now what?](docs/assets/banner.svg)
+
+Short version, with pictures and a thirty-second demo: **https://redakarrach.github.io/keyleak/**
+
 Within minutes, usually. Bots watch every public commit for strings that look like
 `AKIA...`. When one lands, they try it. If it works, they start spending your money:
 GPU instances for mining, Bedrock calls for resold AI access, SES for spam. Then they
@@ -65,7 +69,7 @@ them, not just the first.
 Python 3.11 or newer.
 
 ```bash
-pipx install keyleak
+pipx install git+https://github.com/RedaKarrach/keyleak
 ```
 
 Or, from a clone of this repository:
