@@ -10,6 +10,7 @@ color_system="standard" (or FORCE_COLOR=1 on a pipe). Needs Pillow and a monospa
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,10 +37,9 @@ def _font(bold: bool = False) -> ImageFont.FreeTypeFont:
         if Path(p).exists():
             f = ImageFont.truetype(p, FONT_SIZE)
             if bold and "Cascadia" in p:
-                try:
+                # not every build of the font is variable; regular weight is fine then
+                with contextlib.suppress(OSError, ValueError):
                     f.set_variation_by_name("Bold")
-                except Exception:  # noqa: BLE001
-                    pass
             return f
     return ImageFont.load_default()
 
