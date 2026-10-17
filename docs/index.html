@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>keyleak</title>
-<meta name="description" content="Your AWS key ended up on GitHub. Scroll through what happens next, and how keyleak finds what the attacker did and what is still running.">
+<meta name="description" content="Your AWS key ended up on GitHub. Seven questions, seven commands, real output. Press enter.">
 <meta property="og:title" content="keyleak">
-<meta property="og:description" content="Your AWS key ended up on GitHub. Now what? Scroll through the first ten minutes, the bill, and the way out.">
+<meta property="og:description" content="Your AWS key ended up on GitHub. Now what? Seven questions, seven commands, real output.">
 <meta property="og:image" content="https://redakarrach.github.io/keyleak/assets/social-preview.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
@@ -14,560 +14,331 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://redakarrach.github.io/keyleak/assets/social-preview.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235e1f2b'/%3E%3Ccircle cx='12' cy='16' r='6' fill='none' stroke='%23f5f1ea' stroke-width='3'/%3E%3Crect x='17' y='14.5' width='11' height='3' fill='%23f5f1ea'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='12' cy='16' r='6' fill='none' stroke='%2339ff8a' stroke-width='3'/%3E%3Crect x='17' y='14.5' width='11' height='3' fill='%2339ff8a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --paper: #f5f1ea; --paper-2: #ece6dc; --ink: #171317; --ink-2: #4a4348; --muted: #7a726f; --line: #d9d0c4;
-    --wine: #5e1f2b; --wine-2: #8a3240; --rose: #d98a90; --ok: #2f6f52; --warn: #a2401f; --gold: #b7791f;
-    --serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --sans: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  }
+  :root { --bg: #040604; --acc: #39ff8a; --acc-dim: #1f8a4c; --text: #cfd8cf; --dim: #6f7a6f; --green: #39ff8a; --red: #ff5f5f; --yellow: #ffcc55; --cyan: #7fd7ff; --sel: #0b1a0f; }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 60px; -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-  a { color: var(--wine); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-  code { font-family: var(--mono); font-size: .88em; background: var(--paper-2); padding: .1em .4em; border-radius: 4px; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0px, rgba(0,0,0,.18) 1px, transparent 1px, transparent 3px); opacity: .5; }
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 49; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); }
+  a { color: var(--cyan); }
+  pre, .pre { font-family: inherit; margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; min-width: 0; }
 
-  /* progress bar */
-  .top { position: fixed; top: 0; left: 0; right: 0; z-index: 20; background: rgba(245,241,234,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
-  .top .in { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 54px; display: flex; align-items: center; gap: 18px; }
-  .brand { font-family: var(--serif); font-weight: 600; font-size: 21px; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 9px; }
-  .brand .mark { width: 20px; height: 20px; border-radius: 5px; background: var(--wine); display: inline-grid; place-items: center; }
-  .clock { font-family: var(--mono); font-size: 13px; color: var(--wine); min-width: 110px; }
-  .clock span { color: var(--muted); }
-  .bar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--wine); transition: width .3s; }
-  .top a.gh { font-size: 13.5px; color: var(--ink-2); text-decoration: none; font-weight: 500; }
+  .status { position: fixed; top: 0; left: 0; right: 0; z-index: 60; background: var(--acc); color: #04150a; font-weight: 600; font-size: 12.5px; padding: 4px 0; }
+  .status .wrap { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .status .keys { margin-left: auto; font-weight: 400; }
+  .status .keys b { font-weight: 600; }
+  @media (max-width: 640px) { .status .keys { display: none; } }
 
-  /* cover */
-  .cover { min-height: 100vh; display: grid; place-items: center; padding: 100px 24px 60px; text-align: center; }
-  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--wine); margin: 0 0 18px; }
-  .cover h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(42px, 7vw, 86px); line-height: 1.02; letter-spacing: -.025em; margin: 0 0 22px; max-width: 900px; font-variation-settings: "opsz" 144; }
-  .cover h1 em { font-style: italic; color: var(--wine); }
-  .cover p { font-size: 20px; color: var(--ink-2); max-width: 560px; margin: 0 auto 30px; }
-  .scroll-hint { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); animation: nudge 1.8s ease-in-out infinite; }
-  @keyframes nudge { 50% { transform: translateY(6px); } }
+  .banner { padding: 56px 0 10px; }
+  .banner pre { color: var(--acc); font-size: clamp(6px, 1.9vw, 14px); line-height: 1.15; text-shadow: 0 0 8px rgba(57,255,138,.35); white-space: pre; overflow: hidden; }
+  .tag { color: var(--dim); margin: 10px 0 0; }
+  .tag b { color: var(--text); font-weight: 400; }
+  .intro { margin: 22px 0 10px; }
+  .intro .k { color: var(--acc); }
 
-  /* story layout */
-  .story { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
-  .stage-wrap { position: sticky; top: 54px; height: calc(100vh - 54px); display: flex; align-items: center; }
-  .stage { width: 100%; }
-  .steps { padding-top: 10vh; }
-  .step { min-height: 88vh; display: flex; flex-direction: column; justify-content: center; padding: 20px 0; opacity: .28; transition: opacity .35s; }
-  .step.on { opacity: 1; }
-  .step .t { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
-  .step .t b { color: var(--wine); font-weight: 600; }
-  .step h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 14px; font-variation-settings: "opsz" 72; }
-  .step h2 em { font-style: italic; color: var(--wine); }
-  .step p { margin: 0 0 12px; color: var(--ink-2); max-width: 520px; }
-  .step .act { margin-top: 10px; }
-  .btn { font-family: var(--sans); font-size: 14px; font-weight: 500; padding: 10px 16px; border-radius: 6px; border: 1px solid var(--ink); background: transparent; color: var(--ink); text-decoration: none; cursor: pointer; display: inline-block; }
-  .btn:hover { background: var(--paper-2); }
-  .btn.fill { background: var(--ink); color: var(--paper); }
-  .btn.wine { background: var(--wine); border-color: var(--wine); color: #fff; }
-  @media (max-width: 899px) {
-    body { font-size: 16px; }
-    .top .in { padding: 0 16px; gap: 12px; height: 50px; }
-    .top .bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 0; }
-    .top .in { position: relative; }
-    .clock { min-width: 0; margin-left: auto; font-size: 12px; }
-    .cover { padding: 90px 18px 40px; }
-    .cover h1 { font-size: clamp(36px, 11vw, 52px); }
-    .cover p { font-size: 17px; }
-    .story { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }
-    .stage-wrap { position: sticky; top: 50px; height: var(--stage-h, 300px); background: var(--paper); z-index: 5; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
-    .stage { max-height: 100%; }
-    .layer.on { max-height: calc(var(--stage-h, 300px) - 20px); overflow: hidden; }
-    .graph svg { max-height: calc(var(--stage-h, 300px) - 24px); }
-    .term pre { height: calc(var(--stage-h, 300px) - 62px); font-size: 11px; padding: 10px 12px; }
-    .term .bar2 span:last-child { display: none; }
-    .report .msg { max-height: calc(var(--stage-h, 300px) - 70px); font-size: 11px; }
-    .card { padding: 12px 14px; }
-    .commit pre, .scan pre { font-size: 11px; }
-    .bill .amt { font-size: 40px; margin: 2px 0 6px; }
-    .bill .rows { font-size: 11.5px; }
-    .bill .rows div { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 4px 0; }
-    .steps { padding-top: 16px; }
-    .step { min-height: 56vh; justify-content: flex-start; padding: 7vh 0 4vh; opacity: .5; }
-    .step.on { opacity: 1; }
-    .step h2 { font-size: clamp(26px, 7.4vw, 34px); }
-    .step p { font-size: 15.5px; }
-    .end { padding: 32px 16px 60px; }
-    .end h2 { font-size: 32px; }
-    .end pre { white-space: pre-wrap; word-break: break-word; font-size: 11.5px; }
-  }
-
-  /* stage layers */
-  .layer { display: none; }
-  .layer.on { display: block; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 0 rgba(0,0,0,.03); }
-  .card .h { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
-  .commit pre { margin: 0; font-family: var(--mono); font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: var(--ink-2); }
-  .commit .key { background: #fbe9ea; color: var(--wine); padding: 0 4px; border-radius: 3px; font-weight: 600; }
-  .commit .diffadd { color: var(--ok); }
-  .scan { position: relative; overflow: hidden; }
-  .scan .line { position: absolute; left: 0; right: 0; height: 2px; background: var(--wine); opacity: .6; animation: scan 1.6s linear infinite; }
-  @keyframes scan { from { top: 0 } to { top: 100% } }
-  .scan .found { margin-top: 12px; font-family: var(--mono); font-size: 13px; color: var(--wine); }
-  .bill { text-align: left; }
-  .bill .amt { font-family: var(--serif); font-size: 64px; letter-spacing: -.03em; line-height: 1; margin: 6px 0 8px; color: var(--ink); }
-  .bill .rows { font-family: var(--mono); font-size: 13px; color: var(--ink-2); }
-  .bill .rows div { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px dashed var(--line); }
-  .bill .rows div:first-child { border-top: 0; }
-
-  /* graph */
-  .graph svg { width: 100%; height: auto; display: block; }
-  .node rect { fill: #fff; stroke: var(--ink); stroke-width: 1.5; transition: stroke .3s, fill .3s; }
-  .node text { fill: var(--ink); font-family: var(--mono); font-size: 13px; }
-  .node .lbl { fill: var(--muted); font-family: var(--sans); font-size: 12px; }
-  .node .sub { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
-  .edge { stroke: var(--ink); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-  .g-hide { opacity: 0; transition: opacity .4s; }
-  .g-show { opacity: 1; transition: opacity .4s; }
-  .node.hot rect { stroke: var(--wine); stroke-width: 2; }
-  .node.hot text:not(.lbl):not(.sub) { fill: var(--wine); }
-  .node.dead rect { stroke: var(--muted); stroke-dasharray: 5 4; fill: var(--paper-2); }
-  .node.dead text:not(.lbl):not(.sub) { fill: var(--muted); text-decoration: line-through; }
-  .node.found rect { stroke: var(--ok); stroke-width: 2; }
-  .node.found text:not(.lbl):not(.sub) { fill: var(--ok); }
-  .pulse { animation: pulse 1.4s ease-in-out infinite; transform-origin: center; }
-  @keyframes pulse { 50% { opacity: .35; } }
-  .stamp { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; fill: var(--wine); }
-  .stamp.ok { fill: var(--ok); }
-  .note { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
-
-  /* terminal */
-  .term { background: var(--ink); color: #e9e2dc; border-radius: 10px; overflow: hidden; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; }
-  .term .bar2 { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: #221c22; color: #9a908f; font-size: 12px; }
-  .term pre { margin: 0; padding: 14px 16px; white-space: pre-wrap; word-break: break-word; height: 330px; overflow: auto; }
-  .term .p { color: var(--rose); } .term .k { color: #f0c987; } .term .r { color: #ff8e8e; font-weight: 600; } .term .m { color: #8f8784; } .term .g { color: #8fd3a8; }
-  .cursor::after { content: "▍"; color: var(--rose); animation: blink 1s steps(1) infinite; }
+  .step { margin-top: 28px; padding-top: 18px; border-top: 1px dashed #1b2a1f; }
+  .q { color: var(--acc); font-weight: 600; font-size: 16px; margin: 0 0 10px; }
+  .q small { color: var(--dim); font-weight: 400; font-size: 12px; display: block; margin-bottom: 4px; letter-spacing: .08em; }
+  .prompt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; cursor: pointer; padding: 6px 8px; margin-left: -8px; border-radius: 3px; }
+  .prompt:hover { background: var(--sel); }
+  .ps1 { color: var(--cyan); flex: 0 0 auto; }
+  .cmd { color: var(--text); min-width: 0; word-break: break-all; }
+  .cmd.ghost { color: var(--dim); }
+  .hint { color: var(--acc-dim); font-size: 12px; }
+  .cur::after { content: "█"; color: var(--acc); animation: blink 1s steps(1) infinite; margin-left: 1px; }
   @keyframes blink { 50% { opacity: 0; } }
-
-  .report .msg { font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--ink-2); white-space: pre-wrap; margin: 0; max-height: 300px; overflow: auto; border-top: 1px solid var(--line); padding-top: 10px; }
-
-  /* ending */
-  .end { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; border-top: 1px solid var(--line); }
-  .end .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; margin-top: 10px; }
-  .end h2 { font-family: var(--serif); font-weight: 400; font-size: 40px; letter-spacing: -.02em; margin: 0 0 6px; }
-  .end h3 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
-  .end pre { background: var(--ink); color: #e9e2dc; border-radius: 8px; padding: 14px; overflow: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; margin: 0 0 10px; }
-  .end ul { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
-  .end li { margin-bottom: 6px; }
-  footer { max-width: 1200px; margin: 0 auto; padding: 0 24px 50px; color: var(--muted); font-size: 13.5px; }
-  @media (prefers-reduced-motion: reduce) { .scroll-hint, .scan .line, .pulse, .cursor::after { animation: none; } html { scroll-behavior: auto; } }
+  .out { margin: 6px 0 0 0; color: var(--text); overflow-x: auto; }
+  .out .c { color: var(--dim); }
+  .out .g { color: var(--green); } .out .r { color: var(--red); } .out .y { color: var(--yellow); } .out .b { color: var(--cyan); }
+  .out .box { white-space: pre; }
+  .menu { margin: 10px 0 0; }
+  .menu button { font-family: inherit; font-size: 13.5px; background: transparent; color: var(--cyan); border: 1px solid #214452; border-radius: 3px; padding: 4px 10px; margin: 4px 6px 0 0; cursor: pointer; max-width: 100%; white-space: normal; word-break: break-word; text-align: left; }
+  .menu button:hover, .menu button.on { background: #0c1a1f; border-color: var(--cyan); }
+  .menu button b { color: var(--acc); font-weight: 600; }
+  .menu .lbl { color: var(--dim); margin-right: 6px; }
+  .next { display: block; margin: 22px 0 0; padding: 12px 10px; text-align: center; color: var(--acc); border: 1px solid var(--acc-dim); border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: 600; letter-spacing: .04em; }
+  .next:hover { background: var(--sel); }
+  .next .arrow { display: block; font-size: 26px; line-height: 1; margin-bottom: 4px; animation: bob 1.4s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(5px); } }
+  .hidden { display: none; }
+  .fin { padding: 40px 0 70px; color: var(--dim); }
+  @media (prefers-reduced-motion: reduce) { .cur::after, .next .arrow { animation: none; } html { scroll-behavior: auto; } body::before { display: none; } }
 </style>
 </head>
 <body>
 
-<div class="top">
-  <div class="in">
-    <a class="brand" href="#top"><span class="mark"><svg width="13" height="13" viewBox="0 0 32 32"><circle cx="12" cy="16" r="6" fill="none" stroke="#f5f1ea" stroke-width="3"/><rect x="17" y="14.5" width="11" height="3" fill="#f5f1ea"/></svg></span>keyleak</a>
-    <div class="clock" id="clock"><span>t+</span>00:00</div>
-    <div class="bar"><i id="bar"></i></div>
-    <a class="gh" href="https://github.com/RedaKarrach/keyleak">GitHub</a>
+<div class="status"><div class="wrap"><span>KEYLEAK</span><span id="prog">[----------] Q0/7</span><span class="keys"><b>enter</b> run &nbsp; <b>↓</b> next &nbsp; <b>1-9</b> choose &nbsp; <b>r</b> restart</span></div></div>
+
+<div class="wrap">
+  <div class="banner" id="top">
+<pre> _  __ _____ __   __ _         _     _  __
+| |/ /| ____|\ \ / /| |       / \   | |/ /
+| ' / |  _|   \ V / | |      / _ \  | ' /
+| . \ | |___   | |  | |___  / ___ \ | . \
+|_|\_\|_____|  |_|  |_____|/_/   \_\|_|\_\</pre>
+    <p class="tag"><b>incident response for a leaked AWS access key</b> · MIT · <a href="https://github.com/RedaKarrach/keyleak">github.com/RedaKarrach/keyleak</a></p>
+    <p class="intro"><span class="k">What this is for.</span> An AWS access key is a password for your cloud account. If it ends up in a public place, like a GitHub repository, bots find it within minutes and start spending your money: big machines for crypto mining, usually in a region you have never opened. Then they make themselves a spare key, so that deleting the one you leaked does not lock them out. keyleak reads your own AWS logs and answers two questions: what did the attacker do, and what is still running. It never touches the stolen key, and it changes nothing unless you say so.<br><br>Seven questions, one command each. Run it, read what it prints, take the arrow down. The output is what keyleak really prints, from a simulated incident with made-up names.<br><br><span class="k">Press enter, or tap the command line, to run the first one.</span></p>
+  </div>
+
+  <div id="steps"></div>
+
+  <div class="fin hidden" id="fin">
+    <div class="step">
+      <p class="q"><small>END OF TRANSMISSION</small>Run it yourself.</p>
+      <pre class="out"><span class="ps1">$</span> pipx install git+https://github.com/RedaKarrach/keyleak
+
+<span class="c"># use your OWN login, never the leaked key</span>
+<span class="ps1">$</span> export AWS_PROFILE=my-admin
+
+<span class="ps1">$</span> keyleak investigate AKIAIOSFODNN7EXAMPLE --home-region eu-west-1   <span class="c"># what did they do</span>
+<span class="ps1">$</span> keyleak sweep --since 2026-10-14                                    <span class="c"># what is still running</span>
+<span class="ps1">$</span> keyleak contain AKIAIOSFODNN7EXAMPLE --confirm                      <span class="c"># switch the key off</span>
+<span class="ps1">$</span> keyleak report --out incident.html                                  <span class="c"># report + message to AWS Support</span>
+
+<span class="c"># permissions for the read-only commands (ships in the repo)</span>
+docs/keyleak-readonly-policy.json: cloudtrail:LookupEvents, iam:Get*, iam:List*, ec2:Describe*, lambda:List*, sts:GetCallerIdentity
+
+<span class="c"># what it cannot do</span>
+- CloudTrail event history only goes back 90 days.
+- it sweeps EC2, Lambda and IAM. check the billing console for the rest.
+- it does not clean up for you. deleting users and terminating machines is your call, on purpose.
+
+<span class="c"># stack</span>
+Python 3.11+ · boto3 · click · rich · tests with botocore Stubber, no AWS account needed</pre>
+      <p style="margin-top:18px"><a href="https://github.com/RedaKarrach/keyleak">source</a> · <a href="https://github.com/RedaKarrach/keyleak#readme">README</a> · <a href="https://github.com/RedaKarrach/keyleak/blob/main/docs/DEMO.md">reproduce it safely with Stratus Red Team</a> · <a href="#top" id="restart">[r] restart</a> · built by <a href="https://github.com/RedaKarrach">Mohamed Reda Karrach</a>. every key, name, IP and amount here is made up. not affiliated with Amazon Web Services.</p>
+    </div>
   </div>
 </div>
-
-<section class="cover" id="top">
-  <div>
-    <p class="kicker">A story in twelve steps</p>
-    <h1>Your AWS key just ended up on GitHub. <em>Here is what happens next.</em></h1>
-    <p>Scroll. The scene follows the story: the leak, the attacker, the bill, and the way out.</p>
-    <div class="scroll-hint">scroll to begin ↓</div>
-  </div>
-</section>
-
-<div class="story">
-  <div class="stage-wrap">
-    <div class="stage" id="stage">
-
-      <!-- layer: commit -->
-      <div class="layer card commit" data-layer="commit">
-        <div class="h">git push origin main &nbsp;·&nbsp; config/settings.py</div>
-        <pre>  DEBUG = False
-<span class="diffadd">+ AWS_ACCESS_KEY_ID = "<span class="key">AKIAIOSFODNN7EXAMPLE</span>"</span>
-<span class="diffadd">+ AWS_SECRET_ACCESS_KEY = "<span class="key">wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY</span>"</span>
-  ALLOWED_HOSTS = ["*"]</pre>
-      </div>
-
-      <!-- layer: scan -->
-      <div class="layer card scan" data-layer="scan">
-        <div class="h">bot · scanning public commits</div>
-        <div class="line"></div>
-        <pre style="margin:0;font-family:var(--mono);font-size:13px;color:var(--ink-2);line-height:1.6">github.com/.../commit/3f9a2c1   settings.py
-grep -E 'AKIA[0-9A-Z]{16}'
-<span style="color:var(--wine);font-weight:600">match: AKIAIOSFODNN7EXAMPLE</span>
-sts get-caller-identity ... <span style="color:var(--ok)">200 OK</span></pre>
-        <div class="found">Key is live. Time since push: 4 minutes.</div>
-      </div>
-
-      <!-- layer: graph -->
-      <div class="layer graph" data-layer="graph">
-        <svg viewBox="0 0 560 420" aria-label="Diagram of what the attacker created from the leaked key">
-          <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#171317"/></marker></defs>
-          <g id="n1" class="node hot"><rect x="20" y="40" width="230" height="64" rx="6"/><text x="135" y="66" text-anchor="middle">AKIA…EXAMPLE</text><text class="lbl" x="135" y="88" text-anchor="middle">the key you leaked</text></g>
-          <g id="recon" class="g-hide"><text class="note" x="270" y="62">GetCallerIdentity</text><text class="note" x="270" y="80">ListUsers</text><text class="note" x="270" y="98">from 203.0.113.5</text></g>
-          <g id="e1" class="g-hide"><path class="edge" d="M135 104 V150"/><text class="note" x="145" y="132">CreateUser</text></g>
-          <g id="n2" class="node hot g-hide"><rect x="20" y="152" width="230" height="64" rx="6"/><text x="135" y="178" text-anchor="middle">backup-svc</text><text class="lbl" x="135" y="200" text-anchor="middle">a user the attacker created</text></g>
-          <g id="e2" class="g-hide"><path class="edge" d="M135 216 V262"/><text class="note" x="145" y="244">CreateAccessKey</text></g>
-          <g id="n3" class="node hot g-hide"><rect x="20" y="264" width="230" height="64" rx="6"/><text x="135" y="290" text-anchor="middle">AKIA…ATTACKER</text><text class="lbl" x="135" y="312" text-anchor="middle">a key the attacker created</text></g>
-          <g id="e3" class="g-hide"><path class="edge" d="M250 296 H330"/><text class="note" x="290" y="284" text-anchor="middle" font-size="10">RunInstances</text></g>
-          <g id="n4" class="node hot g-hide"><rect x="334" y="250" width="206" height="92" rx="6"/><text x="437" y="278" text-anchor="middle">8 × g5.2xlarge</text><text class="lbl" x="437" y="300" text-anchor="middle">ap-southeast-1 (Singapore)</text><text class="sub" x="437" y="322" text-anchor="middle">GPU · mining · billing</text><circle class="pulse" cx="526" cy="264" r="5" fill="#5e1f2b"/></g>
-          <text id="stamp" class="stamp g-hide" x="437" y="372" text-anchor="middle">STILL RUNNING · STILL BILLING</text>
-          <text id="stamp-ok" class="stamp ok g-hide" x="280" y="400" text-anchor="middle">ALL FOUR, ON ONE SCREEN</text>
-        </svg>
-      </div>
-
-      <!-- layer: bill -->
-      <div class="layer card bill" data-layer="bill">
-        <div class="h">AWS Billing · October · invoice preview</div>
-        <div class="amt">$2,412.80</div>
-        <div class="rows">
-          <div><span>EC2 g5.2xlarge × 8, ap-southeast-1</span><span>$2,318.40</span></div>
-          <div><span>EBS, ap-southeast-1</span><span>$61.20</span></div>
-          <div><span>Data transfer</span><span>$33.20</span></div>
-          <div><span>Everything you actually use</span><span>$0.00</span></div>
-        </div>
-      </div>
-
-      <!-- layer: terminal -->
-      <div class="layer term" data-layer="term">
-        <div class="bar2"><b style="color:#cfc6c0;font-weight:500">terminal</b><span>·</span><span>your own credentials, never the leaked key</span></div>
-        <pre id="term-out"><span class="p">$</span> <span class="cursor"></span></pre>
-      </div>
-
-      <!-- layer: report -->
-      <div class="layer card report" data-layer="report">
-        <div class="h">incident.html · message to AWS Support</div>
-        <pre class="msg">Subject: Billing adjustment request after unauthorized use of a compromised access key (AKIAIOSFODNN7EXAMPLE)
-
-Hello AWS Support,
-
-On or around 2026-10-14 an IAM access key in my account (123456789012) was accidentally exposed publicly and then used by a third party without my authorization. I am writing to request a review of the resulting charges.
-
-What happened, from CloudTrail event history (UTC):
-  - 2026-10-14 12:02:00: CreateUser in us-east-1 from 203.0.113.5 (Persistence)
-  - 2026-10-14 12:02:30: CreateAccessKey in us-east-1 from 203.0.113.5 (Persistence)
-  - 2026-10-14 12:09:00: RunInstances in ap-southeast-1 from 203.0.113.5 (Cryptomining)
-
-What I have done so far:
-  - 2026-10-17 13:02: deactivated access key AKIAIOSFODNN7EXAMPLE on user deploy-bot
-  - 2026-10-17 13:05: deleted user backup-svc and key AKIAATTACKER00000001
-  - 2026-10-17 13:06: terminated 8 instances in ap-southeast-1
-
-Thank you,
-[your name]</pre>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="steps" id="steps">
-
-    <div class="step" data-layer="commit" data-t="00:00" data-g="">
-      <p class="t"><b>Step 1</b> · t+00:00</p>
-      <h2>You push a commit.</h2>
-      <p>A settings file with an access key in it. You were in a hurry. You do not notice, and nothing tells you.</p>
-    </div>
-
-    <div class="step" data-layer="scan" data-t="00:04" data-g="">
-      <p class="t"><b>Step 2</b> · t+00:04</p>
-      <h2>A bot finds it in <em>four minutes.</em></h2>
-      <p>Bots read every public commit on GitHub looking for strings shaped like <code>AKIA…</code>. Then they try the key. It works.</p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="00:05" data-g="n1 recon">
-      <p class="t"><b>Step 3</b> · t+00:05</p>
-      <h2>The attacker looks around.</h2>
-      <p><code>GetCallerIdentity</code>: who am I. <code>ListUsers</code>: who else is here. Quiet, read-only, from an IP you have never seen.</p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="00:07" data-g="n1 recon e1 n2">
-      <p class="t"><b>Step 4</b> · t+00:07</p>
-      <h2>They create a user called <em>backup-svc.</em></h2>
-      <p>A name chosen to look boring, so that nobody deletes it when they clean up later.</p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="00:08" data-g="n1 recon e1 n2 e2 n3">
-      <p class="t"><b>Step 5</b> · t+00:08</p>
-      <h2>They give that user its own key.</h2>
-      <p>This is the backdoor. It is not the key you leaked. It will keep working after you delete the key you leaked.</p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="00:14" data-g="n1 recon e1 n2 e2 n3 e3 n4">
-      <p class="t"><b>Step 6</b> · t+00:14</p>
-      <h2>Eight GPU machines start in Singapore.</h2>
-      <p>A region you have never opened, launched with the new key, not the leaked one. They mine cryptocurrency. You pay for the electricity.</p>
-    </div>
-
-    <div class="step" data-layer="bill" data-t="day 3" data-g="">
-      <p class="t"><b>Step 7</b> · day 3</p>
-      <h2>The bill arrives.</h2>
-      <p>Three days later, an email from AWS. This is usually the first moment you learn anything happened.</p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="day 3" data-g="n1 e1 n2 e2 n3 e3 n4 stamp" data-dead="n1">
-      <p class="t"><b>Step 8</b> · day 3, ten minutes later</p>
-      <h2>You delete the leaked key. <em>Nothing changes.</em></h2>
-      <p>Every guide says "delete the key". You do. The user, the second key and the machines are untouched, because they were never tied to the key you deleted. This is where most people stop, and where the second bill comes from.</p>
-    </div>
-
-    <div class="step" data-layer="term" data-t="day 3" data-g="" data-term="investigate">
-      <p class="t"><b>Step 9</b> · keyleak investigate</p>
-      <h2>One command, run as <em>yourself.</em></h2>
-      <p>keyleak reads your own CloudTrail logs with your own login. The leaked key is only a search term. It finds the key, then follows what the key created, then what <em>that</em> created.</p>
-      <p class="act"><button class="btn fill" data-replay="investigate">Replay</button></p>
-    </div>
-
-    <div class="step" data-layer="graph" data-t="day 3" data-g="n1 e1 n2 e2 n3 e3 n4 stamp-ok" data-found="n1 n2 n3 n4">
-      <p class="t"><b>Step 10</b> · the pivot</p>
-      <h2>All four, on one screen.</h2>
-      <p>The leaked key, the user it made, the key that user got, and the machines that key launched. Each one found through the one before it. Now you can remove all of them, not only the first.</p>
-    </div>
-
-    <div class="step" data-layer="term" data-t="day 3" data-g="" data-term="sweep">
-      <p class="t"><b>Step 11</b> · keyleak sweep, then contain</p>
-      <h2>What is still running, and the one switch.</h2>
-      <p><code>sweep</code> lists what is still billing, in every region. <code>contain</code> turns off exactly one key, only with <code>--confirm</code>, and prints what it changed. Terminating the machines and deleting the user stays in your hands.</p>
-      <p class="act"><button class="btn fill" data-replay="sweep">Replay</button></p>
-    </div>
-
-    <div class="step" data-layer="report" data-t="day 3" data-g="">
-      <p class="t"><b>Step 12</b> · keyleak report</p>
-      <h2>A report, and a refund request already written.</h2>
-      <p>One HTML file with the timeline, what was running, what you did, and a message to AWS Support with the facts filled in. AWS often waives a first incident when you can show exactly this.</p>
-      <p class="act"><a class="btn wine" href="#end">Get keyleak ↓</a></p>
-    </div>
-
-  </div>
-</div>
-
-<section class="end" id="end">
-  <p class="kicker">The end, and the start</p>
-  <h2>Thirty seconds to run it.</h2>
-  <div class="grid">
-    <div>
-      <h3>Install and run</h3>
-      <pre>pipx install git+https://github.com/RedaKarrach/keyleak
-
-export AWS_PROFILE=my-admin     # your own login, never the leaked key
-keyleak investigate AKIAIOSFODNN7EXAMPLE --home-region eu-west-1
-keyleak sweep --since 2026-10-14
-keyleak contain AKIAIOSFODNN7EXAMPLE --confirm
-keyleak report --out incident.html</pre>
-    </div>
-    <div>
-      <h3>Why it is safe to run while stressed</h3>
-      <ul>
-        <li>It never uses the leaked key, and refuses to start if your credentials are that key.</li>
-        <li>investigate, sweep and report change nothing. contain changes one key, with <code>--confirm</code>.</li>
-        <li>Nothing leaves your machine. No accounts, no telemetry.</li>
-        <li>A read-only IAM policy with the few permissions it needs ships in the repository.</li>
-      </ul>
-      <h3 style="margin-top:18px">What it cannot do</h3>
-      <ul>
-        <li>CloudTrail event history is 90 days; older activity is gone.</li>
-        <li>It sweeps EC2, Lambda and IAM. Check billing for the rest.</li>
-        <li>It is a first-response tool, not a forensic suite.</li>
-      </ul>
-    </div>
-    <div>
-      <h3>For developers</h3>
-      <ul>
-        <li>Python 3.11+, boto3, click, rich. MIT.</li>
-        <li>Tests use botocore Stubber; no AWS account needed. The attacker scenario on this page is the test fixture.</li>
-        <li><a href="https://github.com/RedaKarrach/keyleak#readme">README</a>: every option, the permissions, the limits.</li>
-        <li><a href="https://github.com/RedaKarrach/keyleak/blob/main/docs/DEMO.md">DEMO.md</a>: reproduce a real detection with Stratus Red Team in a throwaway account.</li>
-        <li><a href="https://github.com/RedaKarrach/keyleak/blob/main/docs/keyleak-readonly-policy.json">Read-only IAM policy</a>.</li>
-      </ul>
-      <p style="margin-top:16px"><a class="btn" href="https://github.com/RedaKarrach/keyleak">View the source on GitHub</a></p>
-    </div>
-  </div>
-</section>
-
-<footer>Every key, name, IP and amount on this page is made up. keyleak is MIT licensed and not affiliated with Amazon Web Services. Built by <a href="https://github.com/RedaKarrach">Mohamed Reda Karrach</a>.</footer>
 
 <script>
 (function () {
-  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
-  var layers = Array.prototype.slice.call(document.querySelectorAll('#stage .layer'));
-  var gIds = ['n1','recon','e1','n2','e2','n3','e3','n4','stamp','stamp-ok'];
-  var nodes = ['n1','n2','n3','n4'];
-  var clock = document.getElementById('clock');
-  var bar = document.getElementById('bar');
-  var current = -1;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function pad(s, n) { s = String(s); while (s.length < n) s += ' '; return s; }
+  function vis(s) { return s.replace(/<[^>]+>/g, ''); }
+  function padv(s, n) { var l = vis(s).length; while (l < n) { s += ' '; l++; } return s; }
+  // a box like rich's Panel
+  function panel(title, lines, w) {
+    var inner = w - 2, t = ' ' + title + ' ', left = Math.floor((inner - t.length) / 2);
+    var out = '┌' + '─'.repeat(left) + t + '─'.repeat(inner - left - t.length) + '┐\n';
+    lines.forEach(function (l) { out += '│ ' + padv(l, inner - 2) + ' │\n'; });
+    return out + '└' + '─'.repeat(inner) + '┘';
+  }
+  // a table like rich's SIMPLE_HEAVY
+  function table(title, cols, rows) {
+    var w = cols.map(function (c, i) { return Math.max(vis(c).length, Math.max.apply(null, rows.map(function (r) { return vis(r[i]).length; }))); });
+    var line = function (r) { return '  ' + r.map(function (c, i) { return padv(c, w[i]); }).join('   ') + '  '; };
+    var out = '';
+    if (title) out += '  <span class="c">' + title + '</span>\n';
+    out += line(cols) + '\n ' + '─'.repeat(vis(line(cols)).length - 1) + ' \n';
+    rows.forEach(function (r) { out += line(r) + '\n'; });
+    return out;
+  }
+  var K = 'AKIAIOSFODNN7EXAMPLE', A = 'AKIAATTACKER00000001';
 
-  function showLayer(name) {
-    layers.forEach(function (l) { l.classList.toggle('on', l.getAttribute('data-layer') === name); });
-  }
-  function setGraph(show, dead, found) {
-    var vis = show ? show.split(' ').filter(Boolean) : [];
-    gIds.forEach(function (id) {
-      var el = document.getElementById(id);
-      var on = vis.indexOf(id) !== -1;
-      el.classList.toggle('g-hide', !on); el.classList.toggle('g-show', on);
-    });
-    var deadSet = dead ? dead.split(' ') : [], foundSet = found ? found.split(' ') : [];
-    nodes.forEach(function (id) {
-      var el = document.getElementById(id);
-      el.classList.toggle('dead', deadSet.indexOf(id) !== -1);
-      el.classList.toggle('found', foundSet.indexOf(id) !== -1);
-      el.classList.toggle('hot', deadSet.indexOf(id) === -1 && foundSet.indexOf(id) === -1);
-    });
-  }
-  function activate(i) {
-    if (i === current) return;
-    current = i;
-    var s = steps[i];
-    steps.forEach(function (st, j) { st.classList.toggle('on', j === i); });
-    showLayer(s.getAttribute('data-layer'));
-    setGraph(s.getAttribute('data-g'), s.getAttribute('data-dead'), s.getAttribute('data-found'));
-    clock.innerHTML = '<span>t+</span>' + s.getAttribute('data-t');
-    bar.style.width = Math.round(((i + 1) / steps.length) * 100) + '%';
-    var t = s.getAttribute('data-term');
-    // Type the terminal output the first time a terminal step is reached, and
-    // again only if a different script is due. Scrolling past and back does
-    // not restart it; the Replay button does.
-    if (t && t !== lastTerm) { lastTerm = t; playTerm(t); }
-  }
-  var lastTerm = null;
-  // Which step is active is decided from the scroll position on every frame,
-  // so it works the same scrolling up and down. A step is active when its top
-  // has passed the "reading line": the middle of the viewport on wide screens,
-  // a little below the pinned scene on narrow ones.
-  var narrow = window.matchMedia('(max-width: 899px)');
-  var stageWrap = document.querySelector('.stage-wrap');
-  var lastWidth = window.innerWidth;
-  function applyStageHeight() {
-    if (narrow.matches) {
-      // About 40% of the viewport, within sane bounds, so the text keeps room.
-      var h = Math.max(220, Math.min(340, Math.round(window.innerHeight * 0.4)));
-      document.documentElement.style.setProperty('--stage-h', h + 'px');
-    } else {
-      document.documentElement.style.removeProperty('--stage-h');
-    }
-  }
-  function readingLine() {
-    if (narrow.matches) {
-      var r = stageWrap.getBoundingClientRect();
-      return Math.min(r.bottom, 50 + r.height) + 70;
-    }
-    return window.innerHeight * 0.5;
-  }
-  function update() {
-    var line = readingLine();
-    var idx = 0;
-    for (var i = 0; i < steps.length; i++) {
-      if (steps[i].getBoundingClientRect().top <= line) idx = i; else break;
-    }
-    activate(idx);
-  }
-  // Throttled with a short timer rather than requestAnimationFrame: some
-  // browsers pause animation frames while scrolling or when backgrounded.
-  var ticking = false;
-  function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    setTimeout(function () { ticking = false; update(); }, 16);
-  }
-  applyStageHeight();
-  update();
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function () {
-    // Phones fire resize when the address bar hides or shows while scrolling.
-    // Only a real width change (rotation, window resize) needs a re-layout.
-    if (window.innerWidth === lastWidth) return;
-    lastWidth = window.innerWidth;
-    applyStageHeight();
-    update();
-  });
+  var investigate = '<span class="box">' + panel('keyleak investigate', [
+      'Verdict: <span class="r">SUSPICIOUS</span>',
+      'Key: ' + K + '  (IAM user "deploy-bot", Active, created 2026-03-03 12:00:00Z)',
+      'Window: 2026-07-19 to 2026-10-17 UTC (90 days). CloudTrail event history only covers the last 90 days.',
+      'Regions queried: 17',
+      'Events found: 6  Flagged: 5  Identities investigated: 3',
+      'Running as: arn:aws:iam::123456789012:user/responder'
+    ], 108) + '\n\n' +
+    table('Identities investigated', ['#', 'Identity', 'How we got here', 'Events', 'Flags', 'Verdict'], [
+      ['1', 'key ' + K + ' (user deploy-bot, Active)', 'the key you reported', '5', '4', '<span class="r">SUSPICIOUS</span>'],
+      ['2', 'user backup-svc', 'CreateUser by key ' + K + ' at 2026-10-14 12:02:00Z', '1', '1', '<span class="r">SUSPICIOUS</span>'],
+      ['3', 'key ' + A + ' (user backup-svc, Active)', 'CreateAccessKey by key ' + K + ' at 2026-10-14 12:02:30Z', '1', '1', '<span class="r">SUSPICIOUS</span>']
+    ]) + '\nFlagged actions\n' +
+    '<span class="r">Persistence (2)</span>  <span class="c">new users, keys, passwords or policies. These survive deleting the leaked key.</span>\n' +
+    table('', ['Sev', 'Time (UTC)', 'Event', 'Region', 'Source IP', 'Identity', 'Note'], [
+      ['<span class="r">high</span>', '2026-10-14 12:02:00Z', 'CreateUser', 'us-east-1', '203.0.113.5', K, ''],
+      ['<span class="r">high</span>', '2026-10-14 12:02:30Z', 'CreateAccessKey', 'us-east-1', '203.0.113.5', K, '']
+    ]) + '\n<span class="r">Cryptomining (1)</span>  <span class="c">compute launched. Instances keep billing until you terminate them.</span>\n' +
+    table('', ['Sev', 'Time (UTC)', 'Event', 'Region', 'Source IP', 'Identity', 'Note'], [
+      ['<span class="r">high</span>', '2026-10-14 12:09:00Z', 'RunInstances', 'ap-southeast-1', '203.0.113.5', 'backup-svc', 'region not normally used']
+    ]) + '\n<span class="b">Discovery (2)</span>  <span class="c">recon from an IP you did not list as yours. Weak on its own, telling next to the rest.</span>\n' +
+    table('', ['Sev', 'Time (UTC)', 'Event', 'Region', 'Source IP', 'Identity', 'Note'], [
+      ['<span class="b">low</span>', '2026-10-14 12:00:00Z', 'GetCallerIdentity', 'us-east-1', '203.0.113.5', K, 'unfamiliar IP'],
+      ['<span class="b">low</span>', '2026-10-14 12:01:00Z', 'ListUsers', 'us-east-1', '203.0.113.5', K, 'unfamiliar IP']
+    ]) + '</span>\nNext steps\n  <span class="y">keyleak sweep --since 2026-10-14</span>            <span class="c"># what is still running</span>\n  <span class="y">keyleak contain ' + K + ' --confirm</span>   <span class="c"># deactivate the leaked key</span>\n  <span class="y">keyleak contain ' + A + ' --confirm</span>   <span class="c"># attacker-created key</span>\n  <span class="y">keyleak report --out incident.html</span>        <span class="c"># HTML report + AWS Support message</span>';
 
-  // terminal
-  var out = document.getElementById('term-out');
-  var scripts = {
-    investigate: [
-      ['cmd', 'keyleak investigate AKIAIOSFODNN7EXAMPLE --home-region eu-west-1'],
-      ['m', 'Querying CloudTrail in 17 regions...'],
-      ['r', 'Verdict: SUSPICIOUS'],
-      ['', 'Key: AKIAIOSFODNN7EXAMPLE  (IAM user "deploy-bot", Inactive)'],
-      ['', 'Events found: 6  Flagged: 5  Identities investigated: 3'],
-      ['', ''],
-      ['', 'Identities investigated'],
-      ['', '  1  key AKIAIOSFODNN7EXAMPLE  the key you reported      SUSPICIOUS'],
-      ['g', '  2  user backup-svc           CreateUser by key 1       SUSPICIOUS'],
-      ['g', '  3  key AKIAATTACKER00000001  CreateAccessKey by key 1  SUSPICIOUS'],
-      ['', ''],
-      ['', 'Persistence (2)   CreateUser, CreateAccessKey   us-east-1'],
-      ['', 'Cryptomining (1)  RunInstances   ap-southeast-1   unusual region'],
-      ['', 'Discovery (2)     GetCallerIdentity, ListUsers  unfamiliar IP'],
-      ['', 'Attacker IP: 203.0.113.5'],
-      ['', ''],
-      ['', 'Next steps'],
-      ['k', '  keyleak sweep --since 2026-10-14'],
-      ['k', '  keyleak contain AKIAATTACKER00000001 --confirm'],
-      ['k', '  keyleak report --out incident.html']
-    ],
-    sweep: [
-      ['cmd', 'keyleak sweep --since 2026-10-14'],
-      ['r', 'high  EC2       ap-southeast-1  i-0a1b2c3d4e5f60789  g5.2xlarge'],
-      ['r', 'high  EC2       ap-southeast-1  i-0a1b2c3d4e5f60790  g5.2xlarge'],
-      ['m', '      ... 6 more g5.2xlarge in ap-southeast-1'],
-      ['r', 'high  IAM user  global          backup-svc           created day 0'],
-      ['r', 'high  IAM key   global          AKIAATTACKER00000001 Active, day 0'],
-      ['', 'low   EC2       us-east-1       i-0f1e2d3c4b5a69788  t3.small web-prod'],
-      ['', ''],
-      ['cmd', 'keyleak contain AKIAATTACKER00000001 --confirm'],
-      ['', 'Changed: key AKIAATTACKER00000001 on IAM user backup-svc'],
-      ['g', '  status Active -> Inactive   via iam:UpdateAccessKey'],
-      ['m', 'Nothing else was touched. Terminate the instances and'],
-      ['m', 'delete the user in the console.'],
-      ['', ''],
-      ['cmd', 'keyleak report --out incident.html'],
-      ['', 'Wrote incident.html. The AWS Support message is at the bottom.']
-    ]
-  };
-  var tTimers = [];
-  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-  function render(script, upto, typingCmd, typed) {
-    var html = '';
-    for (var i = 0; i < upto; i++) {
-      var kind = script[i][0], text = esc(script[i][1]);
-      if (kind === 'cmd') html += '<span class="p">$</span> ' + text + '\n';
-      else if (kind) html += '<span class="' + kind + '">' + text + '</span>\n';
-      else html += text + '\n';
-    }
-    if (typingCmd !== undefined) html += '<span class="p">$</span> ' + esc(typingCmd.slice(0, typed)) + '<span class="cursor"></span>';
-    else if (upto >= script.length) html += '<span class="p">$</span> <span class="cursor"></span>';
-    out.innerHTML = html;
-    out.scrollTop = out.scrollHeight;
+  var timeline = '<span class="box">' + table('Timeline (6 events, oldest first)', ['Time (UTC)', 'Event', 'Region', 'Source IP', 'User agent', 'Identity'], [
+      ['2026-10-13 12:00:00Z', '  ListBuckets', 'us-east-1', '198.51.100.10', 'aws-cli/2.13.0 s3.ls', K],
+      ['2026-10-14 12:00:00Z', '<span class="r">! GetCallerIdentity</span>', 'us-east-1', '203.0.113.5', 'aws-cli/2.15.30 iam.create-user', K],
+      ['2026-10-14 12:01:00Z', '<span class="r">! ListUsers</span>', 'us-east-1', '203.0.113.5', 'aws-cli/2.15.30 iam.create-user', K],
+      ['2026-10-14 12:02:00Z', '<span class="r">! CreateUser</span>', 'us-east-1', '203.0.113.5', 'aws-cli/2.15.30 iam.create-user', K],
+      ['2026-10-14 12:02:30Z', '<span class="r">! CreateAccessKey</span>', 'us-east-1', '203.0.113.5', 'aws-cli/2.15.30 iam.create-user', K],
+      ['2026-10-14 12:09:00Z', '<span class="r">! RunInstances</span>', 'ap-southeast-1', '203.0.113.5', 'Boto3/1.34.0', A]
+    ]) + '</span><span class="c">Events marked ! are in the flagged actions above.\n// read it top to bottom: the owner used the key on the 13th from their usual IP. the next day a new IP\n// asks "who am I", lists the users, creates one, gives it a key, and nine minutes later that new key\n// launches machines in Singapore. the kali in the user agent is the attacker\'s operating system.</span>';
+
+  var sweep = '<span class="box">' + panel('keyleak sweep (read-only)', ['Since: 2026-10-14 12:00 UTC   Regions: 17', 'Concern: <span class="r">high 5</span>  medium 0  low 2'], 108) + '\n\n' +
+    table('', ['Concern', 'Kind', 'Region', 'Resource', 'Created / launched', 'Detail'], [
+      ['<span class="r">high</span>', 'EC2 instance', 'ap-southeast-1', 'i-000000000000009a1', '2026-10-14 12:09:00Z', 'g5.2xlarge launched after --since; GPU/large type is the classic mining profile'],
+      ['<span class="r">high</span>', 'EC2 instance', 'ap-southeast-1', 'i-000000000000009a2', '2026-10-14 12:09:00Z', 'g5.2xlarge launched after --since; GPU/large type is the classic mining profile'],
+      ['<span class="r">high</span>', 'EC2 instance', 'ap-southeast-1', 'i-000000000000009a3', '2026-10-14 12:09:00Z', 'g5.2xlarge launched after --since; GPU/large type is the classic mining profile'],
+      ['<span class="r">high</span>', 'IAM access key', 'global', A, '2026-10-14 12:02:30Z', 'Active key on a user that was also created after --since'],
+      ['<span class="r">high</span>', 'IAM user', 'global', 'backup-svc', '2026-10-14 12:02:00Z', 'user created after --since; attackers create users as a backdoor'],
+      ['<span class="b">low</span>', 'Lambda function', 'us-east-1', 'thumbnailer', '2026-05-02 09:12:00Z', 'python3.12, untouched since before --since'],
+      ['<span class="b">low</span>', 'EC2 instance', 'us-east-1', 'i-0f1e2d3c4b5a69788', '2026-03-21 12:00:00Z', 't3.small launched before --since; Name="web-prod"']
+    ]) + '</span>  - Only EC2, Lambda and IAM are checked. Attackers also use ECS, SageMaker, Lightsail and Bedrock; check the Billing\n    console\'s Bill page by service.\n\nCleanup is manual on purpose. Terminate what you do not recognise in the console, then run:\n  <span class="y">keyleak report --out incident.html</span>';
+
+  function containPanel(key, user) {
+    return '<span class="box">' + panel('keyleak contain', [
+      'Changed: access key ' + key + ' on IAM user ' + user,
+      '  status Active -> Inactive',
+      '  via iam:UpdateAccessKey (Status=Inactive) at 2026-10-17 12:52:00Z',
+      '<span class="g">Verified: IAM now reports the key as Inactive.</span>',
+      '<span class="c">Nothing else was touched. The key still exists so CloudTrail lookups keep working.</span>'
+    ], 108) + '</span>\nRemember: deactivating this key does NOT remove users or keys the attacker created.\nRun `keyleak investigate` and `keyleak sweep` if you have not already.';
   }
-  function playTerm(name) {
-    tTimers.forEach(clearTimeout); tTimers = [];
-    var script = scripts[name], i = 0;
-    function step() {
-      if (i >= script.length) { render(script, script.length); return; }
-      var kind = script[i][0], text = script[i][1];
-      if (kind === 'cmd') {
-        var typed = 0;
-        (function typeChar() {
-          if (typed <= text.length) { render(script, i, text, typed); typed++; tTimers.push(setTimeout(typeChar, 24)); }
-          else { i++; tTimers.push(setTimeout(step, 320)); }
-        })();
-      } else {
-        i++; render(script, i);
-        tTimers.push(setTimeout(step, text === '' ? 50 : (kind === 'm' ? 650 : 100)));
-      }
+
+  var support = 'Subject: Billing adjustment request after unauthorized use of a compromised access key (' + K + ')\n\nHello AWS Support,\n\nOn or around 2026-10-14 an IAM access key in my account (123456789012) was accidentally exposed publicly and then used by a third party without my authorization. I am writing to request a review of the resulting charges and a billing adjustment for the usage I did not initiate.\n\nWhat happened, from CloudTrail event history (times in UTC):\n  - 2026-10-14 12:02:00Z: CreateUser in us-east-1 from 203.0.113.5 (Persistence)\n  - 2026-10-14 12:02:30Z: CreateAccessKey in us-east-1 from 203.0.113.5 (Persistence)\n  - 2026-10-14 12:09:00Z: RunInstances in ap-southeast-1 from 203.0.113.5 (Cryptomining)\n  - 2026-10-14 12:00:00Z: GetCallerIdentity in us-east-1 from 203.0.113.5 (Discovery)\n  - 2026-10-14 12:01:00Z: ListUsers in us-east-1 from 203.0.113.5 (Discovery)\n\nSource IP addresses used by the unauthorized party: 203.0.113.5\n\nResources I found still running when I checked (2026-10-17 12:59:08Z):\n  - EC2 instance i-000000000000009a1 in ap-southeast-1, created 2026-10-14 12:09:00Z\n  - EC2 instance i-000000000000009a2 in ap-southeast-1, created 2026-10-14 12:09:00Z\n  - EC2 instance i-000000000000009a3 in ap-southeast-1, created 2026-10-14 12:09:00Z\n  - IAM access key ' + A + ' in global, created 2026-10-14 12:02:30Z\n  - IAM user backup-svc in global, created 2026-10-14 12:02:00Z\n\nWhat I have done so far:\n  - 2026-10-17 12:52:00Z: deactivated access key ' + K + ' on user deploy-bot (iam:UpdateAccessKey UserName=deploy-bot AccessKeyId=' + K + ' Status=Inactive)\n  - [date]: removed the exposed credential from the public location and rotated it\n  - [date]: deleted the IAM users and access keys created by the unauthorized party\n  - [date]: terminated the EC2 instances listed above\n\nI have reviewed the account for remaining unauthorized resources. Please let me know if you need any further details from CloudTrail or the billing console.\n\nThank you,\n[your name]';
+
+  var STEPS = [
+    {
+      q: 'Your AWS key is sitting in a public GitHub repo. How did it get there?',
+      cmd: 'git show HEAD~3 -- config/settings.py',
+      out: '<span class="y">commit 3f9a2c1</span>  "quick fix for staging"  <span class="c">3 days ago</span>\n\n<span class="c">--- a/config/settings.py\n+++ b/config/settings.py</span>\n  DEBUG = False\n<span class="g">+ AWS_ACCESS_KEY_ID = "' + K + '"\n+ AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"</span>\n  ALLOWED_HOSTS = ["*"]\n<span class="c">// a settings file, a hurry, a push. the AKIA... part is the key id (public half). the second line is the secret.\n// bots read every public commit on GitHub looking for exactly this pattern.</span>',
+      menu: [
+        { k: '1', label: 'what happened in the next ten minutes', run: function () { return '<span class="c">// from CloudTrail, your account\'s own log of every API call:</span>\n00:00  you push the commit\n00:04  a bot finds the key and tries it.  <span class="g">it works.</span>\n00:05  <span class="y">GetCallerIdentity</span>, <span class="y">ListUsers</span>        <span class="c">// who am I, who else is here</span>\n00:07  <span class="r">CreateUser backup-svc</span>                 <span class="c">// a user you have never heard of, named to look boring</span>\n00:08  <span class="r">CreateAccessKey ' + A + '</span>  <span class="c">// a spare key for that user. this is the backdoor.</span>\n00:14  <span class="r">RunInstances × 8, g5.2xlarge, ap-southeast-1</span>  <span class="c">// GPU machines in Singapore. they mine, you pay.</span>'; } },
+        { k: '2', label: 'the bill', run: function () { return '<span class="ps1">$</span> aws ce get-cost-and-usage --time-period Start=2026-10-01,End=2026-10-17 --granularity MONTHLY --metrics UnblendedCost\n{\n  "Total": { "UnblendedCost": { "Amount": "<span class="r">2412.80</span>", "Unit": "USD" } },\n  "ByService": { "Amazon Elastic Compute Cloud (ap-southeast-1)": "2318.40", "EBS": "61.20", "Data Transfer": "33.20" }\n}\n<span class="c">// last month: $0.00, free tier. this is usually the first moment you learn anything happened.</span>'; } }
+      ]
+    },
+    {
+      q: 'What did the attacker actually do with it?',
+      cmd: 'keyleak investigate ' + K + ' --home-region eu-west-1',
+      out: '<span class="c">// run with YOUR login (AWS_PROFILE=my-admin). the leaked key is only a search term.\nQuerying CloudTrail in 17 regions...</span>\n' + investigate,
+      menu: [
+        { k: '1', label: 'show the full timeline', run: function () { return timeline; } },
+        { k: '2', label: 'what is "Identities investigated"?', run: function () { return '<span class="c"># the pivot. keyleak does not stop at the leaked key. every user or key the attacker created is\n# a new lead, and it investigates that one the same way: row 2 is the user they made, row 3 is\n# the key they gave it, and "How we got here" says which event created it. the machines were\n# launched with row 3, not with the key you leaked.</span>'; } }
+      ]
+    },
+    {
+      q: 'Delete the leaked key. Problem solved?',
+      cmd: 'aws iam delete-access-key --user-name deploy-bot --access-key-id ' + K,
+      out: '<span class="c">// no output. the leaked key is gone. now, as the attacker, with the key THEY made:</span>\n<span class="ps1">$</span> AWS_ACCESS_KEY_ID=' + A + ' AWS_SECRET_ACCESS_KEY=... aws sts get-caller-identity\n{\n  "UserId": "AIDANEWUSER000000001",\n  "Account": "123456789012",\n  "Arn": "arn:aws:iam::123456789012:user/<span class="r">backup-svc</span>"\n}\n<span class="r">// still works.</span> <span class="c">their key was never tied to yours. the machines are still running. this is where most guides\n// stop, and where the second bill comes from.</span>',
+      menu: [
+        { k: '1', label: 'so what do I actually remove?', run: function () { return '<span class="c"># everything keyleak listed, not only row 1:</span>\n  user      backup-svc              <span class="c">// IAM console: delete the user (its keys and policies go with it)</span>\n  key       ' + A + '    <span class="c">// or switch it off first with keyleak contain</span>\n  machines  8 × g5.2xlarge, ap-southeast-1   <span class="c">// EC2 console, region Singapore: terminate</span>\n<span class="c"># keyleak never deletes anything. it tells you what to look at; you decide. on purpose.</span>'; } }
+      ]
+    },
+    {
+      q: 'What is still running and costing money right now?',
+      cmd: 'keyleak sweep --since 2026-10-14',
+      out: sweep,
+      menu: [
+        { k: '1', label: 'why "high"?', run: function () { return '<span class="c"># high  = created after the date you gave, and it looks like an attacker\'s choice: GPU or very large\n#         machines, or a brand-new user or key. the three g5.2xlarge in a region you never use are the\n#         classic cryptomining profile.\n# low   = it was there before the leak. your own stuff, probably. listed so you can check in one place.\n# --since defaults to the first flagged event from the last investigate, so you can leave it out.</span>'; } }
+      ]
+    },
+    {
+      q: 'How do you switch the key off without breaking something else?',
+      cmd: 'keyleak contain ' + K,
+      out: '<span class="r">keyleak: contain changes your AWS account: it would set access key ' + K + ' to Inactive.\nNothing was done. Re-run with --confirm to go ahead.</span>\n<span class="c">// the only command that changes anything refuses to run until you say --confirm.\n// and it deactivates, it does not delete: you can turn it back on if something legitimate breaks.</span>',
+      menu: [
+        { k: '1', label: 'keyleak contain ' + K + ' --confirm', run: function () { return '<span class="ps1">$</span> keyleak contain ' + K + ' --confirm\n' + containPanel(K, 'deploy-bot'); } },
+        { k: '2', label: 'and the attacker\'s key', run: function () { return '<span class="ps1">$</span> keyleak contain ' + A + ' --confirm\n' + containPanel(A, 'backup-svc') + '\n<span class="c">// both keys are dead. now delete the user and terminate the machines in the console.</span>'; } }
+      ]
+    },
+    {
+      q: 'What do you tell AWS to get the money back?',
+      cmd: 'keyleak report --out incident.html',
+      out: 'Wrote incident.html\nOpen it in a browser. The AWS Support message is at the bottom; fill in the bracketed parts.\n<span class="c">// one file: the timeline, what was running, what you did, and a message to AWS Support with the facts\n// already filled in. AWS often waives a first incident when you can show exactly this.</span>',
+      menu: [
+        { k: '1', label: 'show the support message', run: function () { return esc(support).replace('[your name]', '<span class="y">[your name]</span>'); } }
+      ]
+    },
+    {
+      q: 'Is it safe to run this while you are panicking?',
+      cmd: 'keyleak --help',
+      out: 'Usage: keyleak [OPTIONS] COMMAND [ARGS]...\n\n  Incident response for a leaked AWS access key.\n\n  Answers "what did the attacker do, and what is still running" from your own\n  CloudTrail logs. Read-only by default: investigate, sweep and report change\n  nothing. Only `contain` makes a change, and only with --confirm.\n\n  <span class="g">SAFETY: keyleak never authenticates with the leaked key.</span> It uses your own\n  credentials (the normal AWS credential chain) and takes the leaked key ID\n  only as an argument. Run it as a separate admin or read-only identity.\n\nCommands:\n  contain      Deactivate the leaked key.\n  investigate  What did the leaked key do? Read-only.\n  report       Write a self-contained HTML report from the last run.\n  sweep        What is still running and costing money? Read-only.',
+      menu: [
+        { k: '1', label: 'what if my terminal is still using the leaked key?', run: function () { return '<span class="ps1">$</span> AWS_ACCESS_KEY_ID=' + K + ' keyleak investigate ' + K + '\n<span class="r">keyleak: Refusing to run: the AWS credentials keyleak would use are the leaked key itself\n(' + K + '). keyleak must run with a DIFFERENT identity, such as an admin or\nread-only user that was never exposed. Fix your AWS_PROFILE or environment variables and try again.</span>\n<span class="c">// it checks, and stops. using the stolen key to investigate the stolen key would muddy your own logs.</span>'; } },
+        { k: '2', label: 'what does it not do?', run: function () { return '<span class="c"># - CloudTrail event history only goes back 90 days. older activity is gone.\n# - it sweeps EC2, Lambda and IAM. attackers also use ECS, SageMaker, Lightsail, Bedrock, SES: check billing.\n# - it is a first-response tool, not a forensic suite, and it does not clean up for you.\n# - nothing leaves your machine. no accounts, no telemetry. two small JSON files in ~/.keyleak so report\n#   can find the last run.</span>'; } }
+      ]
     }
-    step();
+  ];
+
+  // ---------- engine ----------
+  var host = document.getElementById('steps'), prog = document.getElementById('prog'), fin = document.getElementById('fin');
+  var cur = -1, state = 'idle', activeEl = null, timers = [];
+  var FAST = /[?&]fast/.test(location.search) || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setProg(n) { var f = Math.round((n / STEPS.length) * 10), s = ''; for (var i = 0; i < 10; i++) s += i < f ? '#' : '-'; prog.textContent = '[' + s + '] Q' + n + '/' + STEPS.length; }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function scrollTo(el) { setTimeout(function () { var y = el.getBoundingClientRect().top + window.pageYOffset - 36; window.scrollTo({ top: y, behavior: 'smooth' }); }, 30); }
+
+  function showStep(i) {
+    if (i >= STEPS.length) { fin.classList.remove('hidden'); state = 'done'; setProg(STEPS.length); scrollTo(fin); return; }
+    cur = i; var s = STEPS[i];
+    var el = document.createElement('section'); el.className = 'step'; el.id = 'q' + (i + 1);
+    el.innerHTML = '<p class="q"><small>QUESTION ' + (i + 1) + ' OF ' + STEPS.length + '</small>' + esc(s.q) + '</p>' +
+      '<div class="prompt" tabindex="0"><span class="ps1">reda@laptop:~$</span> <span class="cmd ghost cur">' + esc(s.cmd) + '</span> <span class="hint">[enter] run</span></div>' +
+      '<pre class="out hidden"></pre><div class="menu hidden"></div>';
+    host.appendChild(el); activeEl = el; state = 'ready'; setProg(i + 1);
+    var prompt = el.querySelector('.prompt');
+    prompt.addEventListener('click', function () { runStep(); });
+    prompt.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); runStep(); } });
+    if (i > 0) scrollTo(el);
   }
-  document.querySelectorAll('[data-replay]').forEach(function (b) {
-    b.addEventListener('click', function () { lastTerm = b.getAttribute('data-replay'); playTerm(lastTerm); });
+  function typeOut(pre, html, done) {
+    var lines = html.split('\n'), i = 0; pre.innerHTML = ''; pre.classList.remove('hidden');
+    if (FAST) { pre.innerHTML = html; done && done(); return; }
+    (function next() {
+      if (i >= lines.length) { done && done(); return; }
+      pre.innerHTML = lines.slice(0, i + 1).join('\n'); i++;
+      timers.push(setTimeout(next, 22));
+    })();
+  }
+  function runStep() {
+    if (state !== 'ready' || !activeEl) return;
+    state = 'running';
+    var s = STEPS[cur], cmdEl = activeEl.querySelector('.cmd'), hint = activeEl.querySelector('.hint'), pre = activeEl.querySelector('.out');
+    hint.textContent = '';
+    var text = s.cmd, n = 0; cmdEl.textContent = ''; cmdEl.classList.remove('ghost');
+    if (FAST) { cmdEl.textContent = text; cmdEl.classList.remove('cur'); typeOut(pre, typeof s.out === 'function' ? s.out() : s.out, function () { afterOutput(s); }); return; }
+    (function type() {
+      if (n <= text.length) { cmdEl.textContent = text.slice(0, n); n++; timers.push(setTimeout(type, 22)); return; }
+      cmdEl.classList.remove('cur');
+      typeOut(pre, typeof s.out === 'function' ? s.out() : s.out, function () { afterOutput(s); });
+    })();
+  }
+  function afterOutput(s) {
+    var menu = activeEl.querySelector('.menu');
+    if (s.menu) {
+      menu.classList.remove('hidden');
+      menu.innerHTML = '<span class="lbl">choose:</span>' + s.menu.map(function (m) { return '<button data-k="' + m.k + '"><b>[' + m.k + ']</b> ' + esc(m.label) + '</button>'; }).join('');
+      menu.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { choose(b.getAttribute('data-k')); }); });
+    }
+    var next = document.createElement('a'); next.className = 'next'; next.href = '#';
+    next.innerHTML = '<span class="arrow">▼</span>' + (cur + 1 < STEPS.length ? 'next: question ' + (cur + 2) + ' of ' + STEPS.length + '   [↓]' : 'the end   [↓]');
+    next.addEventListener('click', function (e) { e.preventDefault(); advance(); });
+    activeEl.appendChild(next); state = 'open';
+  }
+  function choose(k) {
+    if (state !== 'open' || !activeEl) return;
+    var s = STEPS[cur], m = (s.menu || []).filter(function (x) { return x.k === k; })[0];
+    if (!m) return;
+    activeEl.querySelectorAll('.menu button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-k') === k); });
+    var extra = activeEl.querySelector('.extra');
+    if (!extra) { extra = document.createElement('pre'); extra.className = 'out extra'; activeEl.querySelector('.menu').insertAdjacentElement('afterend', extra); }
+    extra.innerHTML = ''; state = 'running'; clearTimers();
+    typeOut(extra, m.run(), function () { state = 'open'; });
+  }
+  function advance() { if (state !== 'open') return; activeEl.querySelector('.next').classList.add('hidden'); showStep(cur + 1); }
+  function restart() { clearTimers(); host.innerHTML = ''; fin.classList.add('hidden'); cur = -1; state = 'idle'; window.scrollTo(0, 0); showStep(0); }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'Enter') { e.preventDefault(); if (state === 'ready') runStep(); else if (state === 'open') advance(); }
+    else if (e.key === 'ArrowDown' && state === 'open') { e.preventDefault(); advance(); }
+    else if (/^[1-9]$/.test(e.key)) { choose(e.key); }
+    else if (e.key === 'r' || e.key === 'R') { restart(); }
   });
+  document.getElementById('restart').addEventListener('click', function (e) { e.preventDefault(); restart(); });
+  showStep(0);
 })();
 </script>
 </body>
