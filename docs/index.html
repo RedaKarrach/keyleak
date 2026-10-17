@@ -27,7 +27,7 @@
     --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 60px; -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
   a { color: var(--wine); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
   code { font-family: var(--mono); font-size: .88em; background: var(--paper-2); padding: .1em .4em; border-radius: 4px; }
@@ -70,15 +70,35 @@
   .btn.fill { background: var(--ink); color: var(--paper); }
   .btn.wine { background: var(--wine); border-color: var(--wine); color: #fff; }
   @media (max-width: 899px) {
-    .story { grid-template-columns: 1fr; gap: 0; }
-    .stage-wrap { position: sticky; top: 54px; height: auto; background: var(--paper); z-index: 5; padding: 12px 0; border-bottom: 1px solid var(--line); }
-    .steps { padding-top: 24px; }
-    .step { min-height: 70vh; }
-    .graph svg { max-height: 38vh; }
-    .term pre { height: 200px; font-size: 11px; }
-    .report .msg { max-height: 160px; }
-    .commit pre, .scan pre { font-size: 11.5px; }
-    .bill .amt { font-size: 44px; }
+    body { font-size: 16px; }
+    .top .in { padding: 0 16px; gap: 12px; height: 50px; }
+    .top .bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 0; }
+    .top .in { position: relative; }
+    .clock { min-width: 0; margin-left: auto; font-size: 12px; }
+    .cover { padding: 90px 18px 40px; }
+    .cover h1 { font-size: clamp(36px, 11vw, 52px); }
+    .cover p { font-size: 17px; }
+    .story { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }
+    .stage-wrap { position: sticky; top: 50px; height: var(--stage-h, 300px); background: var(--paper); z-index: 5; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
+    .stage { max-height: 100%; }
+    .layer.on { max-height: calc(var(--stage-h, 300px) - 20px); overflow: hidden; }
+    .graph svg { max-height: calc(var(--stage-h, 300px) - 24px); }
+    .term pre { height: calc(var(--stage-h, 300px) - 62px); font-size: 11px; padding: 10px 12px; }
+    .term .bar2 span:last-child { display: none; }
+    .report .msg { max-height: calc(var(--stage-h, 300px) - 70px); font-size: 11px; }
+    .card { padding: 12px 14px; }
+    .commit pre, .scan pre { font-size: 11px; }
+    .bill .amt { font-size: 40px; margin: 2px 0 6px; }
+    .bill .rows { font-size: 11.5px; }
+    .bill .rows div { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 4px 0; }
+    .steps { padding-top: 16px; }
+    .step { min-height: 56vh; justify-content: flex-start; padding: 7vh 0 4vh; opacity: .5; }
+    .step.on { opacity: 1; }
+    .step h2 { font-size: clamp(26px, 7.4vw, 34px); }
+    .step p { font-size: 15.5px; }
+    .end { padding: 32px 16px 60px; }
+    .end h2 { font-size: 32px; }
+    .end pre { white-space: pre-wrap; word-break: break-word; font-size: 11.5px; }
   }
 
   /* stage layers */
@@ -208,10 +228,10 @@ sts get-caller-identity ... <span style="color:var(--ok)">200 OK</span></pre>
         <div class="h">AWS Billing · October · invoice preview</div>
         <div class="amt">$2,412.80</div>
         <div class="rows">
-          <div><span>Amazon EC2 · ap-southeast-1 · g5.2xlarge × 8</span><span>$2,318.40</span></div>
-          <div><span>EBS · ap-southeast-1</span><span>$61.20</span></div>
+          <div><span>EC2 g5.2xlarge × 8, ap-southeast-1</span><span>$2,318.40</span></div>
+          <div><span>EBS, ap-southeast-1</span><span>$61.20</span></div>
           <div><span>Data transfer</span><span>$33.20</span></div>
-          <div><span>Everything you actually use</span><span>$0.00 (free tier)</span></div>
+          <div><span>Everything you actually use</span><span>$0.00</span></div>
         </div>
       </div>
 
@@ -412,14 +432,37 @@ keyleak report --out incident.html</pre>
     var t = s.getAttribute('data-term');
     if (t) playTerm(t);
   }
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) activate(steps.indexOf(e.target)); });
-    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
-    steps.forEach(function (s) { io.observe(s); });
-  } else {
-    activate(0);
+  // On narrow screens the scene is pinned at the top, so the trigger band sits
+  // just below it; on wide screens the band is the middle of the viewport.
+  var io = null;
+  var narrow = window.matchMedia('(max-width: 899px)');
+  function stageHeight() {
+    // About 40% of the viewport, within sane bounds, so the text keeps room.
+    return Math.max(220, Math.min(340, Math.round(window.innerHeight * 0.4)));
   }
+  function setupObserver() {
+    if (io) io.disconnect();
+    if (!('IntersectionObserver' in window)) { activate(0); return; }
+    var margin = '-45% 0px -45% 0px';
+    if (narrow.matches) {
+      var h = stageHeight();
+      document.documentElement.style.setProperty('--stage-h', h + 'px');
+      var topPct = Math.min(70, Math.round(((h + 50) / window.innerHeight) * 100));
+      margin = '-' + topPct + '% 0px -' + Math.max(10, 90 - topPct - 15) + '% 0px';
+    } else {
+      document.documentElement.style.removeProperty('--stage-h');
+    }
+    io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) activate(steps.indexOf(e.target)); });
+    }, { rootMargin: margin, threshold: 0 });
+    steps.forEach(function (s) { io.observe(s); });
+  }
+  setupObserver();
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { current = -1; setupObserver(); }, 150);
+  });
 
   // terminal
   var out = document.getElementById('term-out');
