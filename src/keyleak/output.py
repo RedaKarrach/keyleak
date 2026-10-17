@@ -259,13 +259,15 @@ def print_sweep(console: Console, result: SweepResult) -> None:
 
     resources = result.sorted_resources()
     if resources:
-        table = Table(box=box.SIMPLE_HEAVY)
+        # Fits the terminal: fixed columns stay on one line, the timestamp may wrap,
+        # Detail takes whatever is left. Nothing is ever cropped.
+        table = Table(box=box.SIMPLE_HEAVY, expand=True)
         table.add_column("Concern", no_wrap=True)
         table.add_column("Kind", no_wrap=True)
         table.add_column("Region", no_wrap=True)
-        table.add_column("Resource", no_wrap=True)
-        table.add_column("Created / launched", no_wrap=True)
-        table.add_column("Detail")
+        table.add_column("Resource", no_wrap=True, overflow="ellipsis", max_width=24)
+        table.add_column("Created / launched", min_width=10)
+        table.add_column("Detail", ratio=1, min_width=16)
         for res in resources:
             table.add_row(
                 Text(res.concern, style=CONCERN_STYLE.get(res.concern, "")),

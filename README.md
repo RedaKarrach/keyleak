@@ -2,7 +2,7 @@
 
 What happens if your AWS key ends up on GitHub?
 
-![keyleak: your AWS key ended up on GitHub. Now what?](docs/assets/banner.svg)
+![keyleak in a terminal: investigate finds the attacker's user and key, sweep lists what is still running, contain switches the key off](docs/assets/demo.gif)
 
 Short version, with pictures and a thirty-second demo: **https://redakarrach.github.io/keyleak/**
 
