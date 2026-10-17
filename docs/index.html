@@ -430,38 +430,61 @@ keyleak report --out incident.html</pre>
     clock.innerHTML = '<span>t+</span>' + s.getAttribute('data-t');
     bar.style.width = Math.round(((i + 1) / steps.length) * 100) + '%';
     var t = s.getAttribute('data-term');
-    if (t) playTerm(t);
+    // Type the terminal output the first time a terminal step is reached, and
+    // again only if a different script is due. Scrolling past and back does
+    // not restart it; the Replay button does.
+    if (t && t !== lastTerm) { lastTerm = t; playTerm(t); }
   }
-  // On narrow screens the scene is pinned at the top, so the trigger band sits
-  // just below it; on wide screens the band is the middle of the viewport.
-  var io = null;
+  var lastTerm = null;
+  // Which step is active is decided from the scroll position on every frame,
+  // so it works the same scrolling up and down. A step is active when its top
+  // has passed the "reading line": the middle of the viewport on wide screens,
+  // a little below the pinned scene on narrow ones.
   var narrow = window.matchMedia('(max-width: 899px)');
-  function stageHeight() {
-    // About 40% of the viewport, within sane bounds, so the text keeps room.
-    return Math.max(220, Math.min(340, Math.round(window.innerHeight * 0.4)));
-  }
-  function setupObserver() {
-    if (io) io.disconnect();
-    if (!('IntersectionObserver' in window)) { activate(0); return; }
-    var margin = '-45% 0px -45% 0px';
+  var stageWrap = document.querySelector('.stage-wrap');
+  var lastWidth = window.innerWidth;
+  function applyStageHeight() {
     if (narrow.matches) {
-      var h = stageHeight();
+      // About 40% of the viewport, within sane bounds, so the text keeps room.
+      var h = Math.max(220, Math.min(340, Math.round(window.innerHeight * 0.4)));
       document.documentElement.style.setProperty('--stage-h', h + 'px');
-      var topPct = Math.min(70, Math.round(((h + 50) / window.innerHeight) * 100));
-      margin = '-' + topPct + '% 0px -' + Math.max(10, 90 - topPct - 15) + '% 0px';
     } else {
       document.documentElement.style.removeProperty('--stage-h');
     }
-    io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) activate(steps.indexOf(e.target)); });
-    }, { rootMargin: margin, threshold: 0 });
-    steps.forEach(function (s) { io.observe(s); });
   }
-  setupObserver();
-  var resizeTimer = null;
+  function readingLine() {
+    if (narrow.matches) {
+      var r = stageWrap.getBoundingClientRect();
+      return Math.min(r.bottom, 50 + r.height) + 70;
+    }
+    return window.innerHeight * 0.5;
+  }
+  function update() {
+    var line = readingLine();
+    var idx = 0;
+    for (var i = 0; i < steps.length; i++) {
+      if (steps[i].getBoundingClientRect().top <= line) idx = i; else break;
+    }
+    activate(idx);
+  }
+  // Throttled with a short timer rather than requestAnimationFrame: some
+  // browsers pause animation frames while scrolling or when backgrounded.
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    setTimeout(function () { ticking = false; update(); }, 16);
+  }
+  applyStageHeight();
+  update();
+  window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function () {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { current = -1; setupObserver(); }, 150);
+    // Phones fire resize when the address bar hides or shows while scrolling.
+    // Only a real width change (rotation, window resize) needs a re-layout.
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    applyStageHeight();
+    update();
   });
 
   // terminal
@@ -543,7 +566,7 @@ keyleak report --out incident.html</pre>
     step();
   }
   document.querySelectorAll('[data-replay]').forEach(function (b) {
-    b.addEventListener('click', function () { playTerm(b.getAttribute('data-replay')); });
+    b.addEventListener('click', function () { lastTerm = b.getAttribute('data-replay'); playTerm(lastTerm); });
   });
 })();
 </script>
