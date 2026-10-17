@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "KeyleakReadCloudTrail",
+      "Effect": "Allow",
+      "Action": [
+        "cloudtrail:LookupEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "KeyleakReadIam",
+      "Effect": "Allow",
+      "Action": [
+        "iam:Get*",
+        "iam:List*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "KeyleakReadCompute",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "lambda:List*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "KeyleakWhoAmI",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
