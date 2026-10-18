@@ -68,14 +68,22 @@ them, not just the first.
 
 Python 3.11 or newer.
 
+With [uv](https://docs.astral.sh/uv/):
+
 ```bash
-pipx install git+https://github.com/RedaKarrach/keyleak
+uv tool install git+https://github.com/RedaKarrach/keyleak
 ```
 
-Or, from a clone of this repository:
+Or try it once without installing anything:
 
 ```bash
-pipx install .
+uvx --from git+https://github.com/RedaKarrach/keyleak keyleak --help
+```
+
+With pipx, if that is what you already use:
+
+```bash
+pipx install git+https://github.com/RedaKarrach/keyleak
 ```
 
 ## Quickstart
@@ -275,12 +283,15 @@ Team in a throwaway account and running keyleak against the result.
 ## Development
 
 ```bash
-pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
 ```bash
-python -m pytest
+uv run pytest
 ```
+
+`uv.lock` pins the exact version of every dependency, and CI installs from it with
+`uv sync --locked`, so a test run on your machine and in CI use the same packages.
 
 The tests use botocore's `Stubber`; no AWS account or network is needed. The
 attacker scenario in `tests/conftest.py` is the one described above, and

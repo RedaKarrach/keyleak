@@ -11,25 +11,25 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          enable-cache: true
+      - name: Install (exact versions from uv.lock)
+        run: uv sync --locked --extra dev
       - name: Test (no AWS account needed; everything is stubbed)
         env:
           AWS_ACCESS_KEY_ID: testing
           AWS_SECRET_ACCESS_KEY: testing
           AWS_DEFAULT_REGION: us-east-1
-        run: python -m pytest
+        run: uv run pytest
       - name: CLI smoke test
         run: |
-          keyleak --help
-          keyleak investigate --help
-          keyleak sweep --help
-          keyleak contain --help
-          keyleak report --help
+          uv run keyleak --help
+          uv run keyleak investigate --help
+          uv run keyleak sweep --help
+          uv run keyleak contain --help
+          uv run keyleak report --help
