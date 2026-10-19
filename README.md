@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/logo.svg" width="128" alt="keyleak logo: a cracked key, leaking"></p>
+
 # keyleak
 
 What happens if your AWS key ends up on GitHub?
