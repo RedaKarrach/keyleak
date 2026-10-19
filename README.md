@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/logo.svg" width="128" alt="keyleak logo: a cracked key, leaking"></p>
+<p align="center"><img src="docs/assets/logo-wordmark.svg" width="860" alt="keyleak: incident response for a leaked AWS key"></p>
 
 # keyleak
 

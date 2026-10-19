@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 230" width="1000" height="230" role="img" aria-label="keyleak">
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1000" height="230" rx="36" fill="#040604"/>
+
+  <!-- mark: a cracked, leaking key -->
+  <g transform="translate(30,24) scale(0.70)" filter="url(#glow)">
+    <g stroke="#39ff8a" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="74" cy="96" r="34" fill="#0b1a0f" stroke-width="9"/>
+      <circle cx="74" cy="96" r="10" fill="#040604" stroke-width="6"/>
+      <path d="M108 96 H214" stroke-width="13" fill="none"/>
+      <path d="M190 96 V120 M212 96 V128" stroke-width="11" fill="none"/>
+    </g>
+    <path d="M150 84 L158 96 L148 104 L160 110" fill="none" stroke="#040604" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#39ff8a">
+      <path d="M156 126 c-7 11 -7 18 0 18 c7 0 7 -7 0 -18z"/>
+      <path d="M158 160 c-5 8 -5 13 0 13 c5 0 5 -5 0 -13z" opacity="0.75"/>
+      <circle cx="160" cy="192" r="4" opacity="0.5"/>
+    </g>
+  </g>
+
+  <text x="250" y="138" font-family="'IBM Plex Mono', ui-monospace, Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" font-size="104" filter="url(#glow)"><tspan fill="#39ff8a">key</tspan><tspan fill="#1f8a4c">leak</tspan></text>
+  <text x="254" y="180" font-family="'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace" font-size="18" fill="#6f7a6f" letter-spacing="2.5">INCIDENT RESPONSE FOR A LEAKED AWS KEY</text>
+
+  <!-- motif: the key's shaft, leaking -->
+  <path d="M250 206 H952" fill="none" stroke="#1f5a37" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#39ff8a" filter="url(#glow)">
+    <circle cx="250" cy="206" r="7"/>
+    <circle cx="430" cy="206" r="7"/>
+    <circle cx="610" cy="206" r="7"/>
+    <circle cx="790" cy="206" r="7"/>
+    <circle cx="952" cy="206" r="7"/>
+  </g>
+</svg>
